@@ -17,10 +17,6 @@ public class Phemex6000 {
             .comparingInt(UrgentCare::getSeverity).reversed()
             .thenComparing(UrgentCare::getArrival)
     );
-    //TODO Añadir un "seguro que quieres crear cita para <name> <Lastname> en cita y urgent care"
-    //TODO Comprobar que el cliente no esté ya en urgetcarequeue
-    //TODO Historial no. unico
-    //TODO arreglar espaciados
 
     public static void main(String[] args) {
         scanner = new Scanner(System.in);
@@ -135,8 +131,11 @@ public class Phemex6000 {
             if (!validHNum) {
                 System.out.println("!! Número de historial inválido !!");
             }
+            validHNum = validator.HnumIsUnique(patients, historyNumber);
+            if (!validHNum) {
+                System.out.println("!! El número de historial ya está registrado !!");
+            }
         }
-
         patients.add(new Patient(firstName, lastName, nid, age, historyNumber));
         System.out.println("Paciente añadido con éxito");
     }
@@ -166,11 +165,19 @@ public class Phemex6000 {
             String patientNid = scanner.nextLine();
             try {
                 patient = validator.findPatientByNid(patients, patientNid.toUpperCase());
-                validPatient = true;
             } catch (Exception e) {
                 System.out.println("No se encuentra un paciente con ese DNI.");
+                continue;
+            }
+            System.out.printf("¿Quieres crear una cita para %s %s? (Y/n)", patient.getFirstName(), patient.getLastName());
+            String userAnswer = scanner.nextLine();
+            validPatient = validator.yesNoQuestion(userAnswer, true);
+            if (!validPatient) {
+                System.out.println("Seleccione al paciente");
             }
         }
+
+        
 
         boolean validDateTime = false;
         LocalDateTime dateTime = LocalDateTime.MIN;
@@ -280,9 +287,19 @@ public class Phemex6000 {
             String patientNid = scanner.nextLine();
             try {
                 patient = validator.findPatientByNid(patients, patientNid.toUpperCase());
-                validPatient = true;
             } catch (Exception e) {
                 System.out.println("No se encuentra ningún paciente con este DNI.");
+                continue;
+            }
+            validPatient = !validator.isAlreadyInQueue(urgentCareQueue, patientNid);
+            if (!validPatient) {
+                System.out.println("El paciente ya se encuentra en la lista de espera de urgencias");
+            }
+            System.out.printf("¿Quieres añadir a %s %s a la lista de espera? (Y/n)", patient.getFirstName(), patient.getLastName());
+            String userAnswer = scanner.nextLine();
+            validPatient = validator.yesNoQuestion(userAnswer, true);
+            if (!validPatient) {
+                System.out.println("Seleccione al paciente");
             }
         }
 

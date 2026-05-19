@@ -4,12 +4,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 import javax.naming.directory.InvalidAttributesException;
 
 public class Validator {
 
     private int minSeverity = 1;
     private int maxSeverity = 10;
+    private String[] yesResponses = {"yes", "y", "yep", "si", "sí", "sip", "s"};
+    private String[] noResponses = {"no", "n", "nope"};
 
     public Validator() {
     }
@@ -20,6 +23,16 @@ public class Validator {
 
     public int getMaxSeverity() {
         return maxSeverity;
+    }
+
+    public boolean yesNoQuestion(String answer, boolean defaultResponse) {
+        String[] responses = defaultResponse ? noResponses : yesResponses;
+        for (String response : responses) {
+            if (answer.toLowerCase().trim().equals(response)) {
+                return !defaultResponse;
+            }
+        }
+        return defaultResponse;
     }
 
     public boolean validateNid(String nid) {
@@ -40,6 +53,15 @@ public class Validator {
     public boolean  nidIsUnique(ArrayList<Patient> patients, String newNid) {
         for (Patient patient : patients) {
             if (patient.getNid().equals(newNid)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean HnumIsUnique(ArrayList<Patient> patients, String newHNum) {
+        for (Patient patient : patients) {
+            if (patient.getHistoryNumber().equals(newHNum)) {
                 return false;
             }
         }
@@ -105,5 +127,15 @@ public class Validator {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean isAlreadyInQueue(PriorityQueue<UrgentCare> urgentCareQueue, String patientNid) {
+        for (UrgentCare urgentCare : urgentCareQueue) {
+            if (urgentCare.getPatient().getNid().equals(patientNid))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
