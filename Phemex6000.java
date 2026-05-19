@@ -2,7 +2,9 @@
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 public class Phemex6000 {
@@ -10,6 +12,16 @@ public class Phemex6000 {
     static Scanner scanner;
     static ArrayList<Patient> patients = new ArrayList<>();
     static ArrayList<Appointment> appointments = new ArrayList<>();
+    static PriorityQueue<UrgentCare> urgentCareQueue = new PriorityQueue<>(
+        Comparator
+            .comparingInt(UrgentCare::getSeverity).reversed()
+            .thenComparing(UrgentCare::getArrival)
+    );
+    //TODO Añadir un "seguro que quieres crear cita para <name> <Lastname> en cita y urgent care"
+    //TODO Comprobar que el cliente no esté ya en urgetcarequeue
+    //TODO Historial no. unico
+    //TODO arreglar espaciados
+
     public static void main(String[] args) {
         scanner = new Scanner(System.in);
         mainMenu();
@@ -20,15 +32,18 @@ public class Phemex6000 {
         boolean exitMenu = false;
         while (!exitMenu) { 
             System.out.print("""
----- Phemex 6000 ----
+\n---- Phemex 6000 ----
   1-Dar de alta un paciente
   2-Mostrar lista de pacientes
-  3-Crear una nueva cita.
-  4-Ver las citas de un paciente
-  5-Ver todas las citas registradas.
+  3-Dar de alta en urgencias
+  4-Ver lista de espera de urgencias
+  5-Atender paciente de urgencias
+  6-Crear una nueva cita.
+  7-Ver las citas de un paciente
+  8-Ver todas las citas registradas.
   0-Salir
 
-> Qué quieres hacer?  """);
+> Qué quieres hacer?\s""");
             switch (scanner.nextLine()) {
                 case "0":
                     exitMenu = true;
@@ -40,12 +55,21 @@ public class Phemex6000 {
                     listPatients();
                     break;
                 case "3":
-                    createAppointment();
+                    addPatientToUrgentCareQueue();
                     break;
                 case "4":
-                    listPatientAppointments();
+                    showUrgentCareQueue();
                     break;
                 case "5":
+                    callNextUrgentCarePatient();
+                    break;
+                case "6":
+                    createAppointment();
+                    break;
+                case "7":
+                    listPatientAppointments();
+                    break;
+                case "8":
                     listAppointments();
                     break;
                 default:
@@ -58,7 +82,7 @@ public class Phemex6000 {
 
     public static void addNewPatient() {
         Validator validator = new Validator();
-        System.out.println("--- Alta Paciente ---");
+        System.out.println("\n--- Alta Paciente ---");
         System.out.print("Nombre: ");
         String firstName = scanner.nextLine();
         System.out.print("Apellidos: ");
@@ -73,11 +97,14 @@ public class Phemex6000 {
             validNid = validator.validateNid(nid);
             if (!validNid) {
                 System.out.println("!! DNI inválido !!");
+                continue;
             }
             validNid = validator.nidIsUnique(patients, nid);
             if (!validNid) {
                 System.out.println("!! El DNI ya está registrado !!");
+                continue;
             }
+            nid = nid.toUpperCase();
         }
 
         boolean isInt = false;
@@ -98,25 +125,24 @@ public class Phemex6000 {
             }
         }
 
-        boolean validHnum = false;
+        boolean validHNum = false;
         String historyNumber = "";
 
-        while (!validHnum) {
+        while (!validHNum) {
             System.out.print("No. Historial: ");
             historyNumber = scanner.nextLine();
-            validHnum = validator.validateHistoryNumber(historyNumber);
-            if (!validHnum) {
+            validHNum = validator.validateHistoryNumber(historyNumber);
+            if (!validHNum) {
                 System.out.println("!! Número de historial inválido !!");
             }
         }
 
         patients.add(new Patient(firstName, lastName, nid, age, historyNumber));
         System.out.println("Paciente añadido con éxito");
-        // System.out.println(patients.getFirst().toString());
     }
 
     public static void listPatients() {
-        System.out.println("-- Listado de pacientes --");
+        System.out.println("\n-- Listado de pacientes --");
         if (patients.isEmpty()) {
             System.out.println("No hay pacientes registrados");
         } else {
@@ -130,7 +156,7 @@ public class Phemex6000 {
 
     public static void createAppointment() {
         Validator validator = new Validator();
-        System.out.println("--- Nueva Cita ---");
+        System.out.println("\n-- Nueva Cita --");
         
         boolean validPatient = false;
         Patient patient = null;
@@ -139,7 +165,7 @@ public class Phemex6000 {
             System.out.print("DNI del paciente: ");
             String patientNid = scanner.nextLine();
             try {
-                patient = validator.findPatientByNid(patients, patientNid);
+                patient = validator.findPatientByNid(patients, patientNid.toUpperCase());
                 validPatient = true;
             } catch (Exception e) {
                 System.out.println("No se encuentra un paciente con ese DNI.");
@@ -156,7 +182,7 @@ public class Phemex6000 {
             while (!validDate) {
                 System.out.print("Fecha de la cita (dd/MM/yyyy): ");
                 String userInput = scanner.nextLine();
-                validDate = validator.isValidDateFormat(userInput);
+                validDate = validator.validateDateFormat(userInput);
                 if (!validDate) {
                     System.out.println("Formato de fecha inválido.");
                     continue;
@@ -170,7 +196,7 @@ public class Phemex6000 {
             while (!validTime) {
                 System.out.print("Hora de la cita (hh:mm): ");
                 String userInput = scanner.nextLine();
-                validTime = validator.isValidTimeFormat(userInput);
+                validTime = validator.validateTimeFormat(userInput);
                 if (!validTime) {
                     System.out.println("Formato de hora inválido.");
                     continue;
@@ -178,7 +204,7 @@ public class Phemex6000 {
                 time = userInput;
             }
 
-            validDateTime = validator.isValidDate(date, time);
+            validDateTime = validator.validateDate(date, time);
 
             if (!validDateTime) {
                 System.out.println("Hora de la cita no válida.");
@@ -209,7 +235,7 @@ public class Phemex6000 {
                 patient = validator.findPatientByNid(patients, patientNid);
                 validPatient = true;
             } catch (Exception e) {
-                System.out.println("No se encuentra un paciente con ese DNI.");
+                System.out.println("No se encuentra ningún paciente con este DNI.");
             }
         }
 
@@ -219,7 +245,7 @@ public class Phemex6000 {
             .stream()
             .filter(a -> a.getPatient().equals(selectedPatient))
             .toList();
-        System.out.println("-- Listado de citas --");
+        System.out.println("\n-- Listado de citas --");
         if (patients.isEmpty()) {
             System.out.println("No hay citas registradas");
         } else {
@@ -231,10 +257,9 @@ public class Phemex6000 {
         System.out.println(HR);
     }
 
-
     public static void listAppointments() {
-        System.out.println("-- Listado de citas --");
-        if (patients.isEmpty()) {
+        System.out.println("\n-- Listado de citas --");
+        if (appointments.isEmpty()) {
             System.out.println("No hay citas registradas");
         } else {
             for (Appointment appointment : appointments) {
@@ -243,5 +268,63 @@ public class Phemex6000 {
             }
         }
         System.out.println(HR);
+    }
+
+    public static void addPatientToUrgentCareQueue() {
+        Validator validator = new Validator();
+        boolean validPatient = false;
+        Patient patient = null;
+        
+        while (!validPatient) {
+            System.out.print("DNI del paciente: ");
+            String patientNid = scanner.nextLine();
+            try {
+                patient = validator.findPatientByNid(patients, patientNid.toUpperCase());
+                validPatient = true;
+            } catch (Exception e) {
+                System.out.println("No se encuentra ningún paciente con este DNI.");
+            }
+        }
+
+        boolean validSeverity = false;
+        int severity = 0;
+        while(!validSeverity) {
+            System.out.print("Gravedad (leve [1] - grave [10]): ");
+            String userInput = scanner.nextLine();
+            validSeverity = validator.validateSeverity(userInput);
+            if(!validSeverity) {
+                System.out.println("Valor inválido para la gravedad");
+                continue;
+            }
+            severity = Integer.parseInt(userInput);
+        }
+
+        UrgentCare urgentCare = new UrgentCare(patient, severity);
+        urgentCareQueue.add(urgentCare);
+        System.out.println("Paciente registrado en urgencias.");
+    }
+
+    public static void showUrgentCareQueue() {
+        PriorityQueue<UrgentCare> queueCopy = new PriorityQueue<>(urgentCareQueue); 
+        System.out.println("\n-- Lista de espera de urgencias --");
+        if (queueCopy.isEmpty()) {
+            System.out.println("Ningún paciente en la lista de espera de urgencias");
+        } else {
+            while (!queueCopy.isEmpty()) { 
+                System.out.println(HR);
+                System.out.println(queueCopy.poll().toString()); 
+            }
+        }
+        System.out.println(HR);
+    }
+
+    public static void callNextUrgentCarePatient() {
+        if (urgentCareQueue.isEmpty()) {
+            System.out.println("Todos los pacientes han sido atendidos");
+        } else {
+            System.out.println("\n-- Siguiente turno --");
+            System.out.println(urgentCareQueue.poll().toString());
+            System.out.println(HR);
+        }
     }
 }

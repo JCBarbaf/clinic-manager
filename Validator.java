@@ -8,7 +8,18 @@ import javax.naming.directory.InvalidAttributesException;
 
 public class Validator {
 
+    private int minSeverity = 1;
+    private int maxSeverity = 10;
+
     public Validator() {
+    }
+
+    public int getMinSeverity() {
+        return minSeverity;
+    }
+
+    public int getMaxSeverity() {
+        return maxSeverity;
     }
 
     public boolean validateNid(String nid) {
@@ -48,7 +59,7 @@ public class Validator {
         throw new InvalidAttributesException();
     }
 
-    public boolean isValidDateFormat(String date) {
+    public boolean validateDateFormat(String date) {
         try {
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
             formatter.parse(date);
@@ -58,7 +69,7 @@ public class Validator {
         }
     }
 
-    public boolean isValidTimeFormat(String time) {
+    public boolean validateTimeFormat(String time) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm")
                     .withResolverStyle(ResolverStyle.STRICT);
@@ -70,9 +81,9 @@ public class Validator {
         }
     }
 
-    public boolean isValidDate(String date, String time) {
+    public boolean validateDate(String date, String time) {
         try {
-            if (!isValidDateFormat(date) || !isValidTimeFormat(time)) {
+            if (!validateDateFormat(date) || !validateTimeFormat(time)) {
                 return false;
             }
 
@@ -82,6 +93,15 @@ public class Validator {
 
             return inputDateTime.isAfter(LocalDateTime.now().plusHours(1));
 
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean validateSeverity(String severityStr) {
+        try {
+            int severity = Integer.parseInt(severityStr);
+            return (severity >= minSeverity && severity <= maxSeverity);
         } catch (Exception e) {
             return false;
         }
