@@ -69,7 +69,7 @@ public class Validator {
     }
 
     public boolean validateHistoryNumber(String historyNumber) {
-        return historyNumber.matches("\\d{6,12}");
+        return historyNumber != null && historyNumber.matches("\\d{6,12}");
     }
 
     public Patient findPatientByNid(ArrayList<Patient> patients, String nid) throws InvalidAttributesException {
@@ -137,5 +137,13 @@ public class Validator {
             }
         }
         return false;
+    }
+
+    public boolean isValidPhone(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("\\d{9}");
+    }
+
+    public boolean isValidEmail(String email) {
+        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     }
 }

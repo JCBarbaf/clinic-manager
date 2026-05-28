@@ -11,12 +11,14 @@ public class Phemex6000 {
     static final String HR = "-----------------------------------------------";
     static Scanner scanner;
     static ArrayList<Patient> patients = new ArrayList<>();
+    static ArrayList<Staff> staff = new ArrayList<>();
     static ArrayList<Appointment> appointments = new ArrayList<>();
     static PriorityQueue<UrgentCare> urgentCareQueue = new PriorityQueue<>(
         Comparator
             .comparingInt(UrgentCare::getSeverity).reversed()
             .thenComparing(UrgentCare::getArrival)
     );
+    static int firstAvailableID = 0;
 
     public static void main(String[] args) {
         scanner = new Scanner(System.in);
@@ -29,14 +31,17 @@ public class Phemex6000 {
         while (!exitMenu) { 
             System.out.print("""
 \n---- Phemex 6000 ----
-  1-Dar de alta un paciente
-  2-Mostrar lista de pacientes
-  3-Dar de alta en urgencias
-  4-Ver lista de espera de urgencias
-  5-Atender paciente de urgencias
-  6-Crear una nueva cita.
-  7-Ver las citas de un paciente
-  8-Ver todas las citas registradas.
+  1-  Dar de alta un paciente
+  2-  Ver lista de pacientes
+  3-  Dar de alta en urgencias
+  4-  Ver lista de espera de urgencias
+  5-  Atender paciente de urgencias
+  6-  Crear una nueva cita
+  7-  Ver las citas de un paciente
+  8-  Ver todas las citas registradas
+  9-  Añadir datos del personal
+  10- Ver lista de personal
+  11- Ver lista de pacientes de un miembro
   0-Salir
 
 > Qué quieres hacer?\s""");
@@ -67,6 +72,15 @@ public class Phemex6000 {
                     break;
                 case "8":
                     listAppointments();
+                    break;
+                case "9":
+                    addStaff();
+                    break;
+                case "10":
+                    listStaff();
+                    break;
+                case "11":
+                    listPatientsOfStaffMember();
                     break;
                 default:
                     System.out.println("!! Por favor, introduce una opción válida !!");
@@ -343,5 +357,51 @@ public class Phemex6000 {
             System.out.println(urgentCareQueue.poll().toString());
             System.out.println(HR);
         }
+    }
+
+    public static void addStaff() {
+        Validator validator = new Validator();
+        System.out.println("\n--- Alta Paciente ---");
+
+        int id = firstAvailableID;
+        firstAvailableID++;
+
+        System.out.print("Nombre: ");
+        String firstName = scanner.nextLine();
+        System.out.print("Apellidos: ");
+        String lastName = scanner.nextLine();
+        
+        boolean validPhone = false;
+        String phoneNumber = "";
+        while (!validPhone) {
+            System.out.print("Teléfono: ");
+            phoneNumber = scanner.nextLine();
+            validPhone = validator.isValidPhone(phoneNumber);
+        }
+
+        boolean validEmail = false;
+        String email = "";
+        while (!validPhone) {
+            System.out.print("Teléfono: ");
+            phoneNumber = scanner.nextLine();
+            validPhone = validator.isValidPhone(phoneNumber);
+        }
+    }
+
+    public static void listStaff() {
+        System.out.println("\n-- Listado de personal --");
+        if (patients.isEmpty()) {
+            System.out.println("No hay personal registrados");
+        } else {
+            for (Staff staffMember : staff) {
+                System.out.println(HR);
+                System.out.println(staffMember.toString());
+            }
+        }
+        System.out.println(HR);
+    }
+
+    public static void listPatientsOfStaffMember() {
+
     }
 }
