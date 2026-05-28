@@ -7,7 +7,7 @@ import java.util.StringJoiner;
 public class Doctor extends Staff {
     private String medicalLicense; //9 dígitos
     private String specialty;
-    private ArrayList<Patient> AssignedPatients = new ArrayList<>();
+    private ArrayList<Patient> assignedPatients = new ArrayList<>();
 
     public Doctor(int id, String firstName, String lastName, String phoneNumber, String email, String medicalLicense, String specialty) {
         super(id, firstName, lastName, phoneNumber, email);
@@ -24,20 +24,20 @@ public class Doctor extends Staff {
     }
 
     public ArrayList<Patient> getAssignedPatients() {
-        return AssignedPatients;
+        return assignedPatients;
     }
 
     public void showAssignedPatients() {
         StringJoiner patientList = new StringJoiner(", ");
 
-        for (Patient patient : AssignedPatients) {
+        for (Patient patient : assignedPatients) {
             patientList.add(String.format("%s %s (%s)",
                 patient.getFirstName(),
                 patient.getLastName(),
                 patient.getNid()));
         }
         
-        System.out.printf("Pacientes del dr. %s %s: %s", 
+        System.out.printf("\nPacientes del dr. %s %s: %s", 
             super.getFirstName(), super.getLastName(), patientList.toString());
         
     }
@@ -55,7 +55,7 @@ DATOS DEL DOCTOR/A
   -Número de pacientes asignados: %d
             """,
             super.getId(), super.getFirstName(), super.getLastName(), super.getPhoneNumber(), super.getEmail(),
-            medicalLicense, specialty, AssignedPatients.size()
+            medicalLicense, specialty, assignedPatients.size()
         );
     }
 }

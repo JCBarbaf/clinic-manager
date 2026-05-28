@@ -41,7 +41,8 @@ public class Phemex6000 {
   8-  Ver todas las citas registradas
   9-  Añadir datos del personal
   10- Ver lista de personal
-  11- Ver lista de pacientes de un miembro
+  11- Añadir paciente a miembro
+  12- Ver lista de pacientes de un miembro
   0-Salir
 
 > Qué quieres hacer?\s""");
@@ -80,6 +81,9 @@ public class Phemex6000 {
                     listStaff();
                     break;
                 case "11":
+                    addPatientToStaffMember();
+                    break;
+                case "12":
                     listPatientsOfStaffMember();
                     break;
                 default:
@@ -168,6 +172,11 @@ public class Phemex6000 {
     }
 
     public static void createAppointment() {
+        if (patients.isEmpty()) {
+            System.out.println("No hay pacientes registrados");
+            return;
+        }
+        
         Validator validator = new Validator();
         System.out.println("\n-- Nueva Cita --");
         
@@ -245,6 +254,10 @@ public class Phemex6000 {
     }
 
     public static void listPatientAppointments() {
+        if (patients.isEmpty()) {
+            System.out.println("No hay pacientes registrados");
+            return;
+        }
         Validator validator = new Validator();
         boolean validPatient = false;
         Patient patient = null;
@@ -292,6 +305,10 @@ public class Phemex6000 {
     }
 
     public static void addPatientToUrgentCareQueue() {
+        if (patients.isEmpty()) {
+            System.out.println("No hay pacientes registrados");
+            return;
+        }
         Validator validator = new Validator();
         boolean validPatient = false;
         Patient patient = null;
@@ -361,7 +378,7 @@ public class Phemex6000 {
 
     public static void addStaff() {
         Validator validator = new Validator();
-        System.out.println("\n--- Alta Paciente ---");
+        System.out.println("\n--- Datos personal ---");
 
         int id = firstAvailableID;
         firstAvailableID++;
@@ -375,24 +392,118 @@ public class Phemex6000 {
         String phoneNumber = "";
         while (!validPhone) {
             System.out.print("Teléfono: ");
-            phoneNumber = scanner.nextLine();
+            phoneNumber = scanner.nextLine().replaceAll("\s", "");
             validPhone = validator.isValidPhone(phoneNumber);
+            if (!validPhone) {
+                System.out.println("Número de teléfono inválido");
+            }
         }
 
         boolean validEmail = false;
         String email = "";
-        while (!validPhone) {
-            System.out.print("Teléfono: ");
-            phoneNumber = scanner.nextLine();
-            validPhone = validator.isValidPhone(phoneNumber);
+        while (!validEmail) {
+            System.out.print("Email: ");
+            email = scanner.nextLine();
+            validEmail = validator.isValidEmail(email);
+            if (!validEmail) {
+                System.out.println("Email inválido");
+            }
+        }
+
+        boolean validStaffType = false;
+        String staffType = "";
+
+        while (!validStaffType) {
+            System.out.print("""
+Tipo de personal:
+  1-Médico
+  2-Enfermería
+  3-Administración
+Que tipo de personal?\s""");
+            String userInput = scanner.nextLine();
+            validStaffType = validator.isValidStaffType(userInput);
+            if (!validStaffType) {
+                System.out.println("Por favor, seleccione un tipo válido");
+                continue;
+            }
+            staffType = userInput;
+        }
+
+        switch (staffType) {
+            case "1":
+                boolean validLicense = false;
+                String medicalLicense = "";
+                while (!validLicense) {
+                    System.out.print("No. Colegiado: ");
+                    medicalLicense = scanner.nextLine();
+                    validLicense = validator.isValidLicense(medicalLicense);
+                    if (!validLicense) {
+                        System.out.println("Número de colegiado inválido");
+                    }
+                }
+
+                System.out.print("Especialidad: ");
+                String specialty = scanner.nextLine();
+
+                Doctor newDoctor = new Doctor(id, firstName, lastName, phoneNumber, email, medicalLicense, specialty);
+
+                staff.add(newDoctor);
+                System.out.println("Médico creado correctamente");
+                break;
+            case "2":
+                System.out.print("Área: ");
+                String areaNurse = scanner.nextLine();
+                
+                Nurse newNurse = new Nurse(id, firstName, lastName, phoneNumber, email, areaNurse);
+
+                staff.add(newNurse);
+                System.out.println("Enfermero/a creado/a correctamente");
+                break;
+            case "3":
+                System.out.print("Área: ");
+                String areaClerk = scanner.nextLine();
+                
+                boolean validAccessLevel = false;
+                int accessLevel = 1;
+                while (!validAccessLevel) {
+                    System.out.print("Nivel de acceso (básico [1] - total [5]): ");
+                    String userInput = scanner.nextLine();
+                    validAccessLevel = validator.isValidAccessLevel(userInput);
+                    if (!validAccessLevel) {
+                        System.out.println("Nivel de acceso inválido");
+                        continue;
+                    }
+                    accessLevel = Integer.parseInt(userInput);
+                }
+
+                System.out.print("Idiomas (separados por comas):");
+                String langString = scanner.nextLine();
+                String[] langs = langString.split(",");
+
+                Clerk newClerk = new Clerk(id, firstName, lastName, phoneNumber, email, areaClerk, accessLevel);
+
+                for (String lang : langs) {
+                    newClerk.addLanguage(lang.trim());                    
+                }
+
+                staff.add(newClerk);
+                System.out.println("Administrativo/a añadido/a correctamente");
+                break;
+            default:
+                System.out.println("!! Error al determinar el tipo de personal");
+                System.out.println("!! No se han podido añadir los datos, por favor vuelva a intentarlo ");           
+                break;
         }
     }
 
     public static void listStaff() {
         System.out.println("\n-- Listado de personal --");
-        if (patients.isEmpty()) {
-            System.out.println("No hay personal registrados");
+        if (staff.isEmpty()) {
+            System.out.println("No hay personal registrado");
         } else {
+            staff.sort((a,b) -> {
+                return Integer.compare(orderStaff(a), orderStaff(b));
+            });
             for (Staff staffMember : staff) {
                 System.out.println(HR);
                 System.out.println(staffMember.toString());
@@ -402,6 +513,118 @@ public class Phemex6000 {
     }
 
     public static void listPatientsOfStaffMember() {
+        if (staff.isEmpty()) {
+            System.out.println("No hay personal registrado");
+            return;
+        }
+        Validator validator = new Validator();
+        boolean validStaff = false;
+        Staff staffMember = null;
 
+        while (!validStaff) {
+            System.out.print("ID del miembro del personal: ");
+            String userInput = scanner.nextLine();
+            try {
+                int staffID = Integer.parseInt(userInput);
+                staffMember = validator.findStaffMemberByID(staff, staffID);
+            } catch (Exception e) {
+                System.out.println("No se encuentra ningún miembro con esa ID.");
+                continue;
+            }
+            if (staffMember instanceof Clerk) {
+                System.out.println("No se pueden ver los pacientes de un administrativo");
+                continue;
+            }
+            System.out.printf("¿Quieres ver los pacientes del %s %s %s? (Y/n)", getStaffType(staffMember), staffMember.getFirstName(), staffMember.getLastName());
+            String userAnswer = scanner.nextLine();
+            validStaff = validator.yesNoQuestion(userAnswer, true);
+        }
+         if (staffMember instanceof Doctor doctor) {
+            doctor.showAssignedPatients();
+        } else if (staffMember instanceof Nurse nurse) {
+            nurse.showAssignedPatients();
+        }
+
+    }
+
+    public static void addPatientToStaffMember() {
+        if (staff.isEmpty()) {
+            System.out.println("No hay personal registrado");
+            return;
+        }
+
+        Validator validator = new Validator();
+        boolean validStaff = false;
+        Staff staffMember = null;
+        
+        while (!validStaff) {
+            System.out.print("ID del miembro del personal: ");
+            String userInput = scanner.nextLine();
+            try {
+                int staffID = Integer.parseInt(userInput);
+                staffMember = validator.findStaffMemberByID(staff, staffID);
+            } catch (Exception e) {
+                System.out.println("No se encuentra ningún miembro con esa ID.");
+                continue;
+            }
+            if (staffMember instanceof Clerk) {
+                System.out.println("No se pueden añadir pacientes a administrativos");
+                continue;
+            }
+            System.out.printf("¿Quieres añadir un paciente al %s %s %s? (Y/n)", getStaffType(staffMember), staffMember.getFirstName(), staffMember.getLastName());
+            String userAnswer = scanner.nextLine();
+            validStaff = validator.yesNoQuestion(userAnswer, true);
+        }
+
+        boolean validPatient = false;
+        Patient patient = null;
+        
+        while (!validPatient) {
+            System.out.print("DNI del paciente: ");
+            String patientNid = scanner.nextLine();
+            try {
+                patient = validator.findPatientByNid(patients, patientNid.toUpperCase());
+            } catch (Exception e) {
+                System.out.println("No se encuentra ningún paciente con este DNI.");
+                continue;
+            }
+            System.out.printf("¿Quieres asignar a %s %s al %s %s %s? (Y/n)", 
+                patient.getFirstName(), patient.getLastName(),
+                getStaffType(staffMember), staffMember.getFirstName(), staffMember.getLastName()
+            );
+            String userAnswer = scanner.nextLine();
+            validPatient = validator.yesNoQuestion(userAnswer, true);
+            if (!validPatient) {
+                System.out.println("Seleccione al paciente");
+            }
+        }
+
+        if (staffMember instanceof Doctor doctor) {
+            doctor.getAssignedPatients().add(patient);
+        } else if (staffMember instanceof Nurse nurse) {
+            nurse.getAssignedPatients().add(patient);
+        }
+        System.out.println("Paciente añadido al miembro del personal");
+    }
+
+    private static int orderStaff(Staff staffMember) {
+        if (staffMember instanceof Doctor) {
+            return 1;
+        } else if (staffMember instanceof Nurse) {
+            return 2;
+        } else if (staffMember instanceof Clerk) {
+            return 3;
+        }
+        return 999;
+    }
+    private static String getStaffType(Staff staffMember) {
+        if (staffMember instanceof Doctor) {
+            return "Médico";
+        } else if (staffMember instanceof Nurse) {
+            return "Enfermero/a";
+        } else if (staffMember instanceof Clerk) {
+            return "Administrativo/a";
+        }
+        return "Miembro";
     }
 }

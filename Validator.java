@@ -11,6 +11,8 @@ public class Validator {
 
     private int minSeverity = 1;
     private int maxSeverity = 10;
+    private int maxAccessLevel = 5;
+    private int staffTypesCount = 3;
     private String[] yesResponses = {"yes", "y", "yep", "si", "sí", "sip", "s"};
     private String[] noResponses = {"no", "n", "nope"};
 
@@ -145,5 +147,36 @@ public class Validator {
 
     public boolean isValidEmail(String email) {
         return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
+    public boolean isValidStaffType(String staffType) {
+        try {
+            int staffTypeInt = Integer.parseInt(staffType);
+            return staffTypeInt > 0 && staffTypeInt <= staffTypesCount;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isValidLicense(String license) {
+        return license != null && license.matches("\\d{9}");
+    }
+
+    public boolean isValidAccessLevel(String accessLevel) {
+        try {
+            int AccessLevelInt = Integer.parseInt(accessLevel);
+            return AccessLevelInt > 0 && AccessLevelInt <= maxAccessLevel;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Staff findStaffMemberByID(ArrayList<Staff> staff, int id) throws InvalidAttributesException {
+        for (Staff staffMember : staff) {
+            if (staffMember.getId() == id) {
+                return staffMember;
+            }
+        }
+        throw new InvalidAttributesException();
     }
 }

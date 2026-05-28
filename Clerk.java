@@ -6,6 +6,8 @@ public class Clerk extends Staff {
     private int accessLevel;
     private ArrayList<String> languages = new ArrayList<>();
 
+    private String[] accessLevelStrings = {"Básico", "Estándar", "Intermedio", "Alto", "Total"};
+
     public Clerk(int id, String firstName, String lastName, String phoneNumber, String email, String area, int accessLevel) {
         super(id, firstName, lastName, phoneNumber, email);
         this.area = area;
@@ -16,8 +18,8 @@ public class Clerk extends Staff {
         return area;
     }
 
-    public int getAccessLevel() {
-        return accessLevel;
+    public String getAccessLevel() {
+        return accessLevelStrings[accessLevel];
     }
 
     public ArrayList<String> getLanguages() {
@@ -37,11 +39,11 @@ DATOS DEL ADMINISTRATIVO/A
   -Teléfono: %s
   -Email: %s
   -Área: %s
-  -Nivel de acceso: %d
+  -Nivel de acceso: %s
   -Idiomas: %s
             """,
             super.getId(), super.getFirstName(), super.getLastName(), super.getPhoneNumber(), super.getEmail(),
-            area, accessLevel, languages.toString()
+            area, accessLevelStrings[accessLevel], languages.toString()
         );
     }
 
